@@ -56,7 +56,9 @@ def parse_iex_dam_price(
             if not cells:
                 continue
 
-            date_cell = next((cell for cell in cells if _DATE_PATTERN.fullmatch(cell)), None)
+            date_cell = next(
+                (cell for cell in cells if _DATE_PATTERN.fullmatch(cell)), None
+            )
             if date_cell is not None:
                 delivery_date = datetime.strptime(date_cell, "%d-%m-%Y").date()
 
