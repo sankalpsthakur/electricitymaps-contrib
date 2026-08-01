@@ -1,6 +1,7 @@
+import re
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
-import re
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
@@ -25,7 +26,7 @@ def parse_iex_dam_price(
     content: bytes,
     zone_key: ZoneKey = ZoneKey("IN"),
     logger: Logger = getLogger(__name__),
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Parse 15-minute unconstrained DAM market-clearing prices from IEX.
 
     The IEX table uses row spans for the delivery date and hour columns, so
@@ -38,10 +39,16 @@ def parse_iex_dam_price(
 
     delivery_date = None
     for table in soup.find_all("table"):
-        headers = [cell.get_text(" ", strip=True) for cell in table.find_all("th")]
-        if not any("Time Block" in header for header in headers):
+        first_row = table.find("tr")
+        if first_row is None:
             continue
-        if not any("MCP" in header for header in headers):
+        headers = [
+            cell.get_text(" ", strip=True)
+            for cell in first_row.find_all(["th", "td"])
+        ]
+        if not any("time block" in header.casefold() for header in headers):
+            continue
+        if not any("mcp" in header.casefold() for header in headers):
             continue
 
         for row in table.find_all("tr"):
@@ -106,7 +113,7 @@ def fetch_price(
     session: Session | None = None,
     target_datetime: datetime | None = None,
     logger: Logger = getLogger(__name__),
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Fetch the latest 15-minute unconstrained day-ahead MCP from IEX."""
     if target_datetime is not None:
         raise NotImplementedError("This parser does not yet support historical dates")
