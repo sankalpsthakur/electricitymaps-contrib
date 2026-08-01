@@ -144,6 +144,7 @@ fallbackZoneMixes:
 has_day_ahead_price_license: False
 hide_day_ahead_price: False
 parsers:
+  price: IN_price.fetch_price
   production: IN.fetch_production
 region: Asia
 subZoneNames:
